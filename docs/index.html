@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HPChatBotのデモ</title>
+</head>
+<body>
+    <h1>右下にChatBotが固定されてます</h1>
+    <main>
+        <div class="chatSettings" style="margin-left: 50px;">
+            <p>chatが出てくるスピードを設定できます。良さそうな設定を教えてください！（単位：ミリ秒。デフォルトは500）</p>
+            <input type="text" name="speed" id="textSpeedInput" value="500">
+
+            <p style="margin-top: 50px;">この画面で質問などの追加が試せた方が良ければ教えてください！</p>
+        </div>
+
+        <!-- ここからchat関連 -->
+        <link rel="stylesheet" href="style.css">
+        <div class="chat display-none">
+            <div class="chatHeader">
+                <h2 class="chatTitle">avex ultryzer<br><b style="font-size: 15px;">お問い合わせはこちらから</b></h2>
+                <button class="closeButton"></button>
+            </div>
+
+            <div class="chatMain"></div>
+
+            <div class="chatFooter">
+                <small>Powered by xxxx</small>
+            </div>
+        </div>
+        <div class="chatStart"><img src="./お問い合わせはこちら.png" alt="お問い合わせはこちら" style="pointer-events: none;"></div>
+        <script src="main.js"></script>
+        <!-- ここまでchat関連 -->
+
+    </main>
+    
+</body>
+</html>
