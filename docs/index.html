@@ -7,11 +7,12 @@
     <title>HPChatBotのデモ</title>
 </head>
 <body>
-    <h1>右下にChatBotが固定されてます</h1>
+    <h1>右下にChatBotが固定されています</h1>
+    <p style="margin-top: 50px;">リロードで最初からできます！</p>
     <main>
-        <div class="chatSettings" style="margin-left: 50px;">
-            <p>chatが出てくるスピードを設定できます。良さそうな設定を教えてください！（単位：ミリ秒。デフォルトは500）</p>
-            <input type="text" name="speed" id="textSpeedInput" value="500">
+        <div class="chatSettings" style="margin-left:50px; margin-top: 50px">
+            <p>下のテキストボックスでchatが出てくるスピードを設定できます。<br>良さそうな設定を教えてください！（単位：ミリ秒。デフォルトは500）</p>
+            <input type="number" name="speed" id="textSpeedInput" value="500" min="0">
 
             <p style="margin-top: 50px;">この画面で質問などの追加が試せた方が良ければ教えてください！</p>
         </div>
