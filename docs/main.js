@@ -328,3 +328,9 @@ document.getElementById("textSpeedInput").addEventListener("change", (e) => {
     defaultSleepTime = e.target.value;
 })
 
+
+document.getElementById("fontSizeInput").addEventListener("change", (e) => {
+    document.querySelectorAll(".chat, .chat *").forEach((elem) => {
+        elem.style.fontSize = e.target.value + "px";
+    })
+})
