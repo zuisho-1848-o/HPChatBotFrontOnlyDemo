@@ -1,5 +1,12 @@
 /** Demo特有の main.js のコードをまとめる */
 
+// const appServerOrigin = "http://localhost:5000";
+
+let defaultSleepTime = 500;
+const restoreAnswerSleepTime = 300;
+
+let useFullScreen = false;
+
 const questions = [
     {
         qId: "a0",
@@ -59,6 +66,11 @@ const setAnswersAndGetNextQ = async (body) => {
 }
 
 
+
+
+
+
+
 document.getElementById("textSpeedInput").addEventListener("change", (e) => {
     defaultSleepTime = e.target.value;
 })
@@ -68,4 +80,9 @@ document.getElementById("fontSizeInput").addEventListener("change", (e) => {
     document.querySelectorAll(".chat, .chat *").forEach((elem) => {
         elem.style.fontSize = e.target.value + "px";
     })
+})
+
+
+document.getElementById("fulScreenCheckBox").addEventListener("change", (e) => {
+    useFullScreen = !useFullScreen;
 })
