@@ -6,9 +6,10 @@ const appServerOrigin = "http://localhost:5000";
 const firstMessages = ["こんにちは！", "Chat へようこそ！", "ぜひ以下の質問にお答えください！！", "長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト"];
 const finishMessage = "質問はすべて終わりです。";
 const chosenMessage = (optionText) => `あなたの回答：「${optionText}」`;
-const defaultSleepTime = 500;
+let defaultSleepTime = 500;
 const restoreAnswerSleepTime = 300;
 const toBeFullScreenWidth = 520 // これよりwidthが小さかったらchat start時にfullscreenにする。
+let useFullScreen = false;
 
 
 const chat = document.getElementsByClassName("chat")[0];
@@ -365,7 +366,7 @@ document.addEventListener('click', function(e) {
 
 chatStart.addEventListener("click", async () => {
     const getFirstQResult = setAnswersAndGetNextQ({"isFirst": true});
-    if(innerWidth < toBeFullScreenWidth) chat.requestFullscreen();
+    if(useFullScreen && innerWidth < toBeFullScreenWidth) chat.requestFullscreen();
 
     if(chatMain.innerHTML == "") {
         for(let message of firstMessages){
@@ -425,4 +426,9 @@ document.getElementById("fontSizeInput").addEventListener("change", (e) => {
     document.querySelectorAll(".chat, .chat *").forEach((elem) => {
         elem.style.fontSize = e.target.value + "px";
     })
+})
+
+
+document.getElementById("fulScreenCheckBox").addEventListener("change", (e) => {
+    useFullScreen = !useFullScreen;
 })
