@@ -266,7 +266,7 @@ main {
 
 .answerTextInputArea {
     width: 90%;
-    height: 30px;
+    height: 70px;
     border-radius: 5px;
     border: var(--chat-chosen-option-border-color) 1px solid;
     background: var(--chat-lightest);
