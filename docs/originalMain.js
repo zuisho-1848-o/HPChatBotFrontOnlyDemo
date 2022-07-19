@@ -10,34 +10,55 @@ let useFullScreen = false;
 const questions = [
     {
         qId: "a0",
-        qText: "好きな色は？",
-        qType: "textInput",
-    },
-    {
+        qText: "好きな色を一つお選びください。",
+        qType: "singleChoice",
+        options: [
+            {id: "a0", text: "青"},
+            {id: "a1", text: "赤"},
+            {id: "a2", text: "黄"},
+        ]
+    },{
         qId: "a1",
-        qText: "好きな言葉は？",
+        qText: "好きな言葉を一つお選びください。",
         qType: "singleChoice",
         options : [
             {id: "a0", text: "天は人の上に人を造らず天は人の下に人を造らず"},
             {id: "a1", text: "夢なき者に成功なし"},
             {id: "a2", text: "精神的に向上心のない者は馬鹿だ"},
         ]
-    },
-    {
+    },{
         qId: "a2",
-        qText: "好きな形は？",
+        qText: "好きな形をお選び下さい。※複数選択可能",
         qType: "multiChoice",
         options : [
             {id: "a0", text: "三角"},
             {id: "a1", text: "四角"},
             {id: "a2", text: "丸"},
+            {id: "a3", text: "星"},
+            {id: "a4", text: "この中にはない"},
         ]
+    },{
+        qId: "a3",
+        qText: "何か一言ご入力ください。",
+        qType: "textInput",
+    },{
+        qId: "a4",
+        qText: "あなたが好きな色は「【color】」で、好きな言葉は「【word】」で、好きな形は「【好きな形】」ですね。最後に「【最後に】」とご入力いただきありがとうございました。",
+        qType: "closing",
     }
 ];
+
+const replaceIDToQId = {
+    "color": "a0",
+    "word": "a1",
+    "好きな形": "a2",
+    "最後に": "a3"
+}
 
 
 
 const setAnswersAndGetNextQ = async (body) => {
+    let nextQ = "";
     if(body?.isFirst) {
         console.log("最初の質問です。");
         nextQ = questions?.[0];
@@ -55,13 +76,16 @@ const setAnswersAndGetNextQ = async (body) => {
     }
 
     console.log("送る質問はこれです。")
+    if(nextQ?.qType === "closing") {
+        nextQ.replaceIDToQId = replaceIDToQId;
+    }
     console.log(nextQ);
     if(!nextQ) {
         nextQ = {finish: true};
     }
 
     return new Promise((resolve, reject) => {
-        resolve(nextQ)
+        resolve(Object.assign({}, nextQ));
     });
 }
 

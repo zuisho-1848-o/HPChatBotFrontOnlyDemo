@@ -6,40 +6,59 @@ console.log("loaded!!");
 const firstMessages = ["こんにちは！", "Chat へようこそ！", "ぜひ以下の質問にお答えください！！", "長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト"];
 const finishMessage = "質問はすべて終わりです。";
 const chosenMessage = (optionText) => `あなたの回答：「${optionText}」`;
-const defaultSleepTime = 100;
-const restoreAnswerSleepTime = 100;
+let defaultSleepTime = 500;
+const restoreAnswerSleepTime = 300;
 const toBeFullScreenWidth = 520 // これよりwidthが小さかったらchat start時にfullscreenにする。
 const useFullScreen = false;
-
 
 
 const questions = [
     {
         qId: "a0",
-        qText: "好きな色は？",
-        qType: "textInput",
-    },
-    {
+        qText: "好きな色を一つお選びください。",
+        qType: "singleChoice",
+        options: [
+            {id: "a0", text: "青"},
+            {id: "a1", text: "赤"},
+            {id: "a2", text: "黄"},
+        ]
+    },{
         qId: "a1",
-        qText: "好きな言葉は？",
+        qText: "好きな言葉を一つお選びください。",
         qType: "singleChoice",
         options : [
             {id: "a0", text: "天は人の上に人を造らず天は人の下に人を造らず"},
             {id: "a1", text: "夢なき者に成功なし"},
             {id: "a2", text: "精神的に向上心のない者は馬鹿だ"},
         ]
-    },
-    {
+    },{
         qId: "a2",
-        qText: "好きな形は？",
+        qText: "好きな形をお選び下さい。※複数選択可能",
         qType: "multiChoice",
         options : [
             {id: "a0", text: "三角"},
             {id: "a1", text: "四角"},
             {id: "a2", text: "丸"},
+            {id: "a3", text: "星"},
+            {id: "a4", text: "この中にはない"},
         ]
+    },{
+        qId: "a3",
+        qText: "何か一言ご入力ください。",
+        qType: "textInput",
+    },{
+        qId: "a4",
+        qText: "あなたが好きな色は「【color】」で、好きな言葉は「【word】」で、好きな形は「【好きな形】」ですね。最後に「【最後に】」とご入力いただきありがとうございました。",
+        qType: "closing",
     }
 ];
+
+const replaceIDToQId = {
+    "color": "a0",
+    "word": "a1",
+    "好きな形": "a2",
+    "最後に": "a3"
+}
 
 
 
@@ -240,6 +259,7 @@ const insertQ = async (chatMainElement, question, sleepTime=defaultSleepTime, an
 
 
 const setAnswersAndGetNextQ = async (body) => {
+    let nextQ = "";
     if(body?.isFirst) {
         console.log("最初の質問です。");
         nextQ = questions?.[0];
@@ -257,21 +277,24 @@ const setAnswersAndGetNextQ = async (body) => {
     }
 
     console.log("送る質問はこれです。")
+    if(nextQ?.qType === "closing") {
+        nextQ.replaceIDToQId = replaceIDToQId;
+    }
     console.log(nextQ);
     if(!nextQ) {
         nextQ = {finish: true};
     }
 
     return new Promise((resolve, reject) => {
-        resolve(nextQ)
+        resolve(Object.assign({}, nextQ));
     });
 }
 
 
 /**
  * 
- * @param {Promise<GetQuestionResult>} fetchPromise 
- * @returns {[GetQuestionResult, number]} 次の質問データとsleepする時間
+ * @param {Promise<Question>} fetchPromise 
+ * @returns {[Question | {finish: true}, number]} 次の質問データとsleepする時間
  */
 const resolveGetQAndCalcSleepTime = async (fetchPromise) => {
     const startTime = new Date();
@@ -284,6 +307,45 @@ const resolveGetQAndCalcSleepTime = async (fetchPromise) => {
     return [nextQ, sleepTime];
 }
 
+/**
+ * 
+ * @param {Element} chatMainElement 
+ * @param {Question} nextQ 
+ * @param {number} sleepTime 
+ */
+const insertClosingText = async (chatMainElement, nextQ, sleepTime) => {
+    const allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
+    const replaceIDToQId = nextQ.replaceIDToQId;
+    let newQText = nextQ.qText;
+
+    console.log("replaceIDToQId:")
+    console.log(replaceIDToQId);
+    console.log("qText:");
+    console.log(nextQ.qText);
+
+    for(let replaceID in replaceIDToQId) {
+        const answers = allChatAnswerData.find((element) => element.question.qId === replaceIDToQId[replaceID])?.answers
+        let answersText = "";
+        if(typeof answers === "string") {
+            answersText = answers;
+        } else {
+            answersText = answers.map(answer => answer.text).join(",");
+        }
+
+        // console.log("answersText:");
+        // console.log(answersText);
+        // console.log("replaceID:");
+        // console.log(replaceID);
+
+        newQText = newQText.replace(`【${replaceID}】`, answersText);
+    }
+
+    nextQ.qText = newQText;
+    console.log("newQText:");
+    console.log(newQText);
+    await insertTextChatFromBot(chatMainElement, nextQ.qText, sleepTime);
+
+}
 
 
 /**
@@ -291,23 +353,28 @@ const resolveGetQAndCalcSleepTime = async (fetchPromise) => {
  * @param {AnswerData} answerData - 回答の結果
  * @param {boolean?} doNotSave - localStorage に回答を保存するか。localstorageからの再取得の時などは既に記録してるため記録しない
  */
-const setNextQ = async (answerData, doNotSave) => {
+ const setNextQ = async (answerData, doNotSave) => {
     const [nextQ, sleepTime] = await resolveGetQAndCalcSleepTime(setAnswersAndGetNextQ({answerData}));
+
+
+    if(!doNotSave) {
+        let allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
+        allChatAnswerData.push(answerData);
+        console.log("全回答データ");
+        console.log(allChatAnswerData);
+        localStorage["allChatAnswerData"] = JSON.stringify(allChatAnswerData);
+    }
 
     // console.log(nextQ);
     if(nextQ.finish) {
         await insertTextChatFromBot(chatMain, finishMessage, sleepTime);
+    } else if(nextQ.qType == "closing"){
+        await insertClosingText(chatMain, nextQ, sleepTime);
     } else {
         await insertQ(chatMain, nextQ, sleepTime);
     }
 
-    if(doNotSave) return;
-
-    let allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
-    allChatAnswerData.push(answerData);
-    console.log("全回答データ");
-    console.log(allChatAnswerData);
-    localStorage["allChatAnswerData"] = JSON.stringify(allChatAnswerData);
+    
 }
 
 
@@ -443,15 +510,20 @@ const handleAnswerSubmit = async (chatMainElement, target) => {
 
 // 増加する可能性のある要素に対する click event をまとめて受け取る
 document.addEventListener('click', function(e) {
-    // 単一選択のlabelに対するクリックイベントを設定
     if (e?.target?.classList?.contains("singleChoiceOptionLabel")) {
+        // 単一選択のlabelに対するクリックイベントを設定
         handleSingleChoiceOptionLabelClick(chatMain, e.target);
+
     } else if(e?.target?.classList?.contains("chatStart") || e?.target?.classList?.contains("closeButton")) {
+        // chat の開閉を操作
         chatStart.classList?.toggle("display-none");
         chat?.classList?.toggle("display-none");
 
+        // 必要ならば全画面にする。
         if(e?.target?.classList?.contains("closeButton") && useFullScreen && document.exitFullscreen) document.exitFullscreen();
+    
     } else if(e?.target?.classList?.contains("answerSubmitButton")) {
+        // 複数選択やテキスト入力に対するクリックイベントを設定
         handleAnswerSubmit(chatMain, e.target);
     }
 });
@@ -498,6 +570,8 @@ chatStart.addEventListener("click", async () => {
             let [nextQ, sleepTime] = await resolveGetQAndCalcSleepTime(getNextQResult);
             if(nextQ.finish) {
                 await insertTextChatFromBot(chatMain, finishMessage, sleepTime);
+            } else if(nextQ.qType === "closing") {
+                await insertClosingText(chatMain, nextQ, sleepTime);
             } else {
                 await insertQ(chatMain, nextQ, sleepTime);
             }
@@ -508,6 +582,8 @@ chatStart.addEventListener("click", async () => {
         }
     }
 })
+
+
 
 
 
@@ -526,3 +602,4 @@ document.getElementById("fontSizeInput").addEventListener("change", (e) => {
 document.getElementById("fulScreenCheckBox").addEventListener("change", (e) => {
     useFullScreen = !useFullScreen;
 })
+
