@@ -16,6 +16,10 @@ const chat = document.getElementsByClassName("chat")[0];
 const chatMain = document.getElementsByClassName("chatMain")[0];
 const chatStart = document.getElementsByClassName("chatStart")[0];
 
+
+// let allChatAnswerData = [];
+
+
 const questions = [
     {
         qId: "a0",
@@ -44,7 +48,7 @@ const questions = [
     }
 ];
 
-// let allChatAnswerData = [];
+
 
 /**
  * 指定したミリ秒、非同期で待機する。
@@ -52,6 +56,18 @@ const questions = [
  * @returns {Promise<null>}
  */
 const sleep = (milliSeconds) => new Promise(resolve => setTimeout(resolve, milliSeconds));
+
+
+/**
+ * AllChatAnswerData を localStorage から取り出して、parse して返す。もし値がなければ空の配列を返す。
+ * @returns {Array<AnswerData>}
+ */
+const getAllChatAnswerDataFromLocalStorage = () => {
+    if(localStorage["allChatAnswerData"]) {
+        return JSON.parse(localStorage["allChatAnswerData"]);
+    }
+    return [];
+}
 
 
 
@@ -62,7 +78,7 @@ const sleep = (milliSeconds) => new Promise(resolve => setTimeout(resolve, milli
  */
 const insertTextChatFromBot = async (element, text, sleepTime=defaultSleepTime, id=undefined) => {
     await sleep(sleepTime);
-    let insertHTML = `<div class='chatMesssageBlock chatFromBot'`
+    let insertHTML = `<div class='chatMessageBlock chatFromBot'`
     if(id) {
         insertHTML += ` id="${id}"`
     }
@@ -71,6 +87,31 @@ const insertTextChatFromBot = async (element, text, sleepTime=defaultSleepTime, 
     element.scrollTop = element.scrollHeight;
 }
 
+
+
+/**
+ * 単一選択や複数選択に過去の回答があった場合に、その回答を取得する。
+ * @param {Array<TextChoiceOption>} answers - 過去のこの質問に対する回答。
+ * @param {string} qId - 質問のid。既に答えられているかの確認に使う。
+ * @returns {Array<string>} 既に回答した選択肢の id の配列。
+ */
+const getAnsweredIDList = (answers, qId) => {
+    let answeredIDList = [];
+    if(!answers) {
+        let allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
+        const prevAnsIndex = allChatAnswerData.findIndex((answerData) => answerData.question.qId === qId);
+        if(prevAnsIndex !== -1) {
+            answers = allChatAnswerData[prevAnsIndex].answers
+        }
+    }
+
+    if(answers) {
+        for(let answer of answers) {
+            answeredIDList.push(answer.id);
+        }
+    }
+    return answeredIDList;
+}
 
 
 /**
@@ -84,13 +125,8 @@ const insertTextChatFromBot = async (element, text, sleepTime=defaultSleepTime, 
  * @returns 
  */
 const insertSingleChoiceBlock = async (element, options, qId, qType, answers) => {
-    let insertHTML = `<div class="chatMesssageBlock choiceBlock">\n`;
-    let answeredIDList = [];
-    if(answers) {
-        for(let answer of answers) {
-            answeredIDList.push(answer.id);
-        }
-    }
+    let insertHTML = `<div class="chatMessageBlock choiceBlock" id="${"choiceBlock-" + qId}">\n`;
+    let answeredIDList = getAnsweredIDList(answers, qId);
 
     for(let option of options){
         let checked = "";
@@ -120,13 +156,8 @@ const insertSingleChoiceBlock = async (element, options, qId, qType, answers) =>
  * @returns 
  */
 const insertMultiChoiceBlock = async (element, options, qId, qType, answers) => {
-    let insertHTML = `<div class="chatMesssageBlock choiceBlock">\n`;
-    let answeredIDList = [];
-    if(answers) {
-        for(let answer of answers) {
-            answeredIDList.push(answer.id);
-        }
-    }
+    let insertHTML = `<div class="chatMessageBlock choiceBlock" id="${"choiceBlock-" + qId}">\n`;
+    let answeredIDList = getAnsweredIDList(answers, qId);
 
     for(let option of options){
         let checked = "";
@@ -148,10 +179,32 @@ const insertMultiChoiceBlock = async (element, options, qId, qType, answers) => 
 
 
 
+
+/**
+ * テキスト入力に対して過去の回答があった場合に、その回答を取得する。
+ * @param {string} qId - 質問のid。既に答えられているかの確認に使う。
+ * @returns {string} 過去の回答のテキスト。
+ */
+const getAnsweredTextValue = (qId) => {
+    let allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
+    const prevAnsIndex = allChatAnswerData.findIndex((answerData) => answerData.question.qId === qId);
+    if(prevAnsIndex === -1) return ""; 
+
+    return allChatAnswerData[prevAnsIndex].answers
+}
+
+
+/**
+ * 
+ * @param {Element} element - テキスト入力を代入する HTML 要素。
+ * @param {string} qId - 質問のid。内部要素の id に使う。
+ * @param {string} qType - 質問の形式。id や name 要素に使う。
+ * @param {string?} value - テキスト入力の初期値。回答の再現などの時に使う。
+ */
 const insertTextInputBlock = async (element, qId, qType, value) => {
-    if(!value) value = "";
+    if(!value) value = getAnsweredTextValue(qId);
     let insertHTML = 
-`<div class="chatMesssageBlock choiceBlock">
+`<div class="chatMessageBlock choiceBlock" id="${"choiceBlock-" + qId}">
     <input id="${qType + "-" + qId}" placeholder="テキストで回答を入力" class="answerTextInputArea" value="${value}" type="text" maxlength="256">
     <input id="${qType + "-" + qId + "-submit"}" class="answerSubmitButton" type="button" value="回答" >
 </div>`;
@@ -247,14 +300,33 @@ const setNextQ = async (answerData, doNotSave) => {
 
     if(doNotSave) return;
 
-    let allChatAnswerData =  [];
-    if(localStorage["allChatAnswerData"]) {
-        allChatAnswerData = JSON.parse(localStorage["allChatAnswerData"]);
-    }
-    allChatAnswerData.push(answerData)
+    let allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
+    allChatAnswerData.push(answerData);
     console.log("全回答データ");
     console.log(allChatAnswerData);
     localStorage["allChatAnswerData"] = JSON.stringify(allChatAnswerData);
+}
+
+
+/**
+ * もし再回答だった場合は、それより下の要素を消し、localStorageからも前の回答を削除する。
+ * @param {string} qId - 今回答した質問のid 
+ */
+const removePrevAnsIfReanswer = (qId) => {
+    /**
+     * @type {Array<AnswerData>}
+     */
+    let allChatAnswerData = getAllChatAnswerDataFromLocalStorage();
+    const prevAnsIndex = allChatAnswerData.findIndex((answerData => answerData.question.qId === qId));
+    if(prevAnsIndex !== -1) {
+        const chatMessageBlocks =  [...document.querySelectorAll(".chatMessageBlock")];
+        const choiceBlockIndex = chatMessageBlocks.findIndex(elem => elem.id === `choiceBlock-${qId}`);
+        for(let i = choiceBlockIndex+1; i < chatMessageBlocks.length; i++) {
+            chatMessageBlocks[i].remove();
+        }
+        allChatAnswerData.splice(prevAnsIndex, 1);
+        localStorage["allChatAnswerData"] = JSON.stringify(allChatAnswerData);
+    }
 }
 
 
@@ -276,6 +348,9 @@ const handleSingleChoiceOptionLabelClick = async (chatMainElement, target) => {
     });;
     // console.log(optionText);
     // console.log(optionFullID);
+
+    removePrevAnsIfReanswer(qId);
+
     await insertTextChatFromBot(chatMainElement, chosenMessage(optionText));
 
     /**
@@ -307,6 +382,8 @@ const handleAnswerSubmit = async (chatMainElement, target) => {
     // console.log(qType);
     // console.log(qId);
 
+    document.getElementById("choiceBlock-empty-" + qId)?.remove();
+
     let answers = "";
     let answersText = "";
     let options;
@@ -330,7 +407,21 @@ const handleAnswerSubmit = async (chatMainElement, target) => {
         }
     // console.log(answersText);
 
-    
+    if(answersText === "" || answersText == null) {
+        switch(qType) {
+            case "multiChoice":
+                document.getElementById("choiceBlock-" + qId).insertAdjacentHTML("beforeend", `<p id="${"choiceBlock-empty-" + qId}" class="choiceBlock-empty">※1つ以上の選択肢を選んでください。</p>`);
+                break;
+
+            case "textInput":
+                document.getElementById("choiceBlock-" + qId).insertAdjacentHTML("beforeend", `<p id="${"choiceBlock-empty-" + qId}" class="choiceBlock-empty">※1文字以上入力してください。</p>`);
+                break;
+        }
+        return;
+    }
+
+    removePrevAnsIfReanswer(qId);
+
     await insertTextChatFromBot(chatMainElement, chosenMessage(answersText));
 
     const answerData = {
@@ -356,7 +447,7 @@ document.addEventListener('click', function(e) {
         chatStart.classList?.toggle("display-none");
         chat?.classList?.toggle("display-none");
 
-        if(e?.target?.classList?.contains("closeButton") && document.exitFullscreen) document.exitFullscreen();
+        if(e?.target?.classList?.contains("closeButton") && useFullScreen && document.exitFullscreen) document.exitFullscreen();
     } else if(e?.target?.classList?.contains("answerSubmitButton")) {
         handleAnswerSubmit(chatMain, e.target);
     }
@@ -414,7 +505,6 @@ chatStart.addEventListener("click", async () => {
         }
     }
 })
-
 
 
 document.getElementById("textSpeedInput").addEventListener("change", (e) => {

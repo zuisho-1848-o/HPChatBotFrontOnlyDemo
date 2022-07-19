@@ -2,22 +2,15 @@ console.log("loaded!!");
 
 
 // サイトごとに異なる可能性のある設定集
-// const appServerOrigin = "http://localhost:5000";
+// const appServerOrigin = "http://localhost:8000";
 const firstMessages = ["こんにちは！", "Chat へようこそ！", "ぜひ以下の質問にお答えください！！", "長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト長い文のテスト"];
 const finishMessage = "質問はすべて終わりです。";
 const chosenMessage = (optionText) => `あなたの回答：「${optionText}」`;
-let defaultSleepTime = 500;
-const restoreAnswerSleepTime = 300;
+const defaultSleepTime = 100;
+const restoreAnswerSleepTime = 100;
 const toBeFullScreenWidth = 520 // これよりwidthが小さかったらchat start時にfullscreenにする。
-let useFullScreen = false;
+const useFullScreen = false;
 
-
-const chat = document.getElementsByClassName("chat")[0];
-const chatMain = document.getElementsByClassName("chatMain")[0];
-const chatStart = document.getElementsByClassName("chatStart")[0];
-
-
-// let allChatAnswerData = [];
 
 
 const questions = [
@@ -49,6 +42,13 @@ const questions = [
 ];
 
 
+
+const chat = document.getElementsByClassName("chat")[0];
+const chatMain = document.getElementsByClassName("chatMain")[0];
+const chatStart = document.getElementsByClassName("chatStart")[0];
+
+
+// let allChatAnswerData = [];
 
 /**
  * 指定したミリ秒、非同期で待機する。
@@ -205,9 +205,12 @@ const insertTextInputBlock = async (element, qId, qType, value) => {
     if(!value) value = getAnsweredTextValue(qId);
     let insertHTML = 
 `<div class="chatMessageBlock choiceBlock" id="${"choiceBlock-" + qId}">
-    <input id="${qType + "-" + qId}" placeholder="テキストで回答を入力" class="answerTextInputArea" value="${value}" type="text" maxlength="256">
+    <textarea id="${qType + "-" + qId}" placeholder="テキストで回答を入力" class="answerTextInputArea" maxlength="256">${value}</textarea>
     <input id="${qType + "-" + qId + "-submit"}" class="answerSubmitButton" type="button" value="回答" >
 </div>`;
+
+// 単一行のバージョンを一応残しておく↓
+// <input id="${qType + "-" + qId}" placeholder="テキストで回答を入力" class="answerTextInputArea" value="${value}" maxlength="256">
 
     await sleep(defaultSleepTime);
     element.insertAdjacentHTML("beforeend", insertHTML);
@@ -505,6 +508,7 @@ chatStart.addEventListener("click", async () => {
         }
     }
 })
+
 
 
 document.getElementById("textSpeedInput").addEventListener("change", (e) => {
