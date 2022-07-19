@@ -9,7 +9,7 @@ const chosenMessage = (optionText) => `あなたの回答：「${optionText}」`
 const defaultSleepTime = 100;
 const restoreAnswerSleepTime = 100;
 const toBeFullScreenWidth = 520 // これよりwidthが小さかったらchat start時にfullscreenにする。
-const useFullScreen = false;
+let useFullScreen = false;
 
 
 
