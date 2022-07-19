@@ -170,7 +170,7 @@ main {
 
 
 .chatMessageBlock:last-child {
-    margin-bottom: 50px;
+    margin-bottom: 100px;
 }
 
 .chatFromBot {
@@ -349,10 +349,12 @@ main {
 /* スマホ用の設定 */
 @media screen and (max-width: 520px) {
     .chat, .chatStart{
-        max-width: var(--chat-mobile-width);
-        max-height: var(--chat-mobile-height);
+        /* max-width: var(--chat-mobile-width); */
+        /* max-height: var(--chat-mobile-height); */
+        max-height: 100vh;
         width: 100%;
-        right: calc((100% - var(--chat-mobile-width))/2);
+        /* right: calc((100% - var(--chat-mobile-width))/2); */
+        right: 0;
         bottom: 0;
         margin-top: auto;
     }
@@ -364,7 +366,8 @@ main {
     }
 
     .chatMain {
-        max-height: var(--chat-main-mobile-height);
+        /* max-height: var(--chat-main-mobile-height); */
+        max-height: 100%;
         height: calc(100% - 70px);
     }
 
@@ -372,15 +375,8 @@ main {
 }
 
 
-@media screen and (max-width: 375px) {
+/* @media screen and (max-width: 375px) {
     .chat {
         right: 0;
-    }
-}
-
-
-/* @media screen and (max-height: 670px) and (max-width: 520px) {
-    .chat {
-        min-height: 1vh;
     }
 } */

@@ -5,7 +5,7 @@
 }
 
 body {
-    background: linear-gradient(to bottom right, white, blue);
+    background: linear-gradient(to bottom right, white, blue );
 }
 
 main {
@@ -18,7 +18,7 @@ main {
 
 /* 変数設定 */
 :root {
-    --chat-width: 400px;
+    --chat-width: 350px;
     --chat-height: 500px;
     --chat-bottom: 30px;
     --chat-right: 30px;
@@ -59,6 +59,7 @@ main {
     margin: 0;
     padding: 0;
     line-height: normal;
+    font-family: "Hiragino Sans","ＭＳ ゴシック", sans-serif;
 }
 
 
@@ -73,7 +74,8 @@ main {
 
 .chat {
     width: var(--chat-width);
-    height: var(--chat-height);
+    max-height: var(--chat-height);
+    height: -webkit-fill-available;
     /* border: #222 solid 1px; */
     right: var(--chat-right);
     position: fixed;
@@ -83,7 +85,7 @@ main {
     transition: all 0.5s;
     opacity: 1;
     transform: translateY(0);
-    z-index: 5;
+    z-index: 10000;
     font-size: 12.8px;
 }
 
@@ -107,6 +109,7 @@ main {
     height: var(--chat-header-height);
     font-size: 15px;
     font-weight: 100;
+    line-height: 25px;
 }
 
 .closeButton {
@@ -157,11 +160,17 @@ main {
     width: 16px;
 } */
 
-.chatMesssageBlock {
+.chatMessageBlock {
     border-radius: 10px;
     padding: 10px;
     margin: 10px;
     max-width: 70%;
+    line-height: 20px;
+}
+
+
+.chatMessageBlock:last-child {
+    margin-bottom: 50px;
 }
 
 .chatFromBot {
@@ -283,10 +292,15 @@ main {
     border-radius: 5px;
     color: var(--chat-white);
     padding: 3px;
+    height: 20px;
 }
 
 .answerSubmitButton:hover {
     cursor: pointer;
+}
+
+.choiceBlock-empty {
+    color: red;
 }
 
 
@@ -336,7 +350,7 @@ main {
 @media screen and (max-width: 520px) {
     .chat, .chatStart{
         max-width: var(--chat-mobile-width);
-        /* max-height: var(--chat-mobile-height); */
+        max-height: var(--chat-mobile-height);
         width: 100%;
         right: calc((100% - var(--chat-mobile-width))/2);
         bottom: 0;
@@ -344,13 +358,13 @@ main {
     }
 
     .chat {
-        height: 100vh;
+        height: -webkit-fill-available;
         top: 0;
         margin-top: 0;
     }
 
     .chatMain {
-        /* max-height: var(--chat-main-mobile-height); */
+        max-height: var(--chat-main-mobile-height);
         height: calc(100% - 70px);
     }
 
